@@ -8,8 +8,8 @@ class Planet {
     // Properties
     constructor (memory,maxmass,color) {
         // TODO: make a circular start in stead of a square start
-        this.x = Math.random()*w/2+w/4;
-        this.y = Math.random()*h/2+h/4;
+        this.x = Math.random()*w/3+w/4;
+        this.y = Math.random()*h/3+h/4;
         let angle = Math.random()*2*Math.PI;
         let velocity = (w+h)/100*Math.random();
         this.velocity = [0,0] //[velocity*Math.cos(angle),velocity*Math.sin(angle)];
@@ -40,10 +40,12 @@ class Planet {
 
         // Draw acceleration vector
         ctx.beginPath();
-        ctx.strokeStyle = "white";
-        let ascale = 10;
+        ctx.strokeStyle = "green";
+        let ascale = 100;
         ctx.moveTo(this.x,this.y);
-        ctx.lineTo(this.x+this.a[0]*ascale,this.y*this.a[1]*ascale)
+        ctx.lineTo(this.x+this.a[0]*ascale,this.y+this.a[1]*ascale);
+        ctx.stroke();
+        console.log([this.x,this.y],[this.x+this.a[0]*ascale,this.y+this.a[1]*ascale]);
     }
     update(otherplanets) {
         // Move
@@ -64,10 +66,10 @@ class Planet {
             if (dx == 0) {
                 angle = Math.PI/2*(dy/Math.abs(dy))
             } else {
-                angle = Math.atan(dy/dx)
+                angle = Math.atan(Math.abs(dy/dx))
             }
             this.a[0] -= a*Math.cos(angle)*(dx/Math.abs(dx)) //gamma*otherplanets[i][2] / Math.ceil(distkvadrat)*(dx/Math.abs(dx));
-            this.a[1] += a*Math.sin(angle) //gamma*otherplanets[i][2] / Math.ceil(distkvadrat)*(dy/Math.abs(dy));
+            this.a[1] -= a*Math.sin(angle)*(dy/Math.abs(dy)) //gamma*otherplanets[i][2] / Math.ceil(distkvadrat)*(dy/Math.abs(dy));
         }
 
         this.velocity = [this.velocity[0]+this.a[0],this.velocity[1]+this.a[1]]
@@ -82,16 +84,17 @@ let planet2 = new Planet(100,300,"blue");
 let planets = [planet1, planet2];
 
 // create n planets
-// for (let i = 0; i < 1; i++) {
-//     planets.push(new Planet(100,300,"yellow"));
-// }
+for (let i = 0; i < 1; i++) {
+    planets.push(new Planet(100,300,"yellow"));
+}
 
 function update() {
     for (i = 0; i < planets.length; i++) {
         let otherplanets = [];
         for (let ii = 0; ii < planets.length; ii++) {
             if (ii != i) {
-                otherplanets.push([planets[ii].lastPos[0],planets[ii].lastPos[1],planets[ii].mass])
+                otherplanets.push([planets[ii].x,planets[ii].y,planets[ii].mass])
+                //otherplanets.push([planets[ii].lastPos[0],planets[ii].lastPos[1],planets[ii].mass])
             }
         }
         planets[i].update(otherplanets);
@@ -114,7 +117,7 @@ let looptest = 0;
 let total_time = 0;
 let lastframetime = 0;
 function loop(time) {
-    if (time >= lastframetime + 100) { // check if 100ms has passed
+    if (time >= lastframetime + 41) { // check if new frame
         looptest++;
         document.getElementById("looptest").innerHTML = looptest;
         lastframetime = time;
