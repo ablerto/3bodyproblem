@@ -4,16 +4,18 @@ let ctx = canvas.getContext("2d");
 let w = parseInt(canvas.getAttribute("width"));
 let h = parseInt(canvas.getAttribute("height"));
 
+let camcords = [0,0];
+
 class Planet {
     // Properties
-    constructor (memory,maxmass,color) {
+    constructor (memory,maxmass,color,x=undefined,y=undefined,v=undefined) {
         // TODO: make a circular start in stead of a square start
-        this.x = Math.random()*w/3+w/4;
-        this.y = Math.random()*h/3+h/4;
+        this.x = Math.random()*w/2+w/4;
+        this.y = Math.random()*h/2+h/4;
         let angle = Math.random()*2*Math.PI;
-        let velocity = (w+h)/100*Math.random();
-        this.velocity = [0,0] //[velocity*Math.cos(angle),velocity*Math.sin(angle)];
-        this.history = [];
+        let velocity = (w+h)/50*Math.random();
+        this.velocity = [velocity*Math.cos(angle),velocity*Math.sin(angle)];
+        this.history = [[0,0]];
         this.historylen = memory;
         this.mass = 100 //Math.random()*maxmass;
         this.r = 25;
@@ -22,36 +24,48 @@ class Planet {
         this.lastPos = [this.x,this.y];
         this.a = [0,0];
     }
+    drawhistory() {
+        //Draw history
+        ctx.moveTo(this.history[0][0]-camcords[0],this.history[0][1]-camcords[1]);
+        ctx.beginPath();
+        ctx.strokeStyle = this.color;
+        ctx.lineWidth = 2;
+        for (let i = 1; i < this.history.length; i++) {
+            ctx.lineTo(this.history[i][0]-camcords[0],this.history[i][1]-camcords[1])
+        }
+        ctx.stroke();
+    }
     draw() {
+        
         //TODO: make gradient from this.color to black
         ctx.beginPath();
         ctx.fillStyle = this.color;
-        ctx.arc(this.x, this.y, this.r, 0, 2*Math.PI);
+        ctx.arc(this.x-camcords[0], this.y-camcords[1], this.r, 0, 2*Math.PI);
         ctx.fill();
 
         // Draw speed vector
         ctx.beginPath();
         ctx.strokeStyle = "orange";
         ctx.lineWidth = 4;
-        ctx.moveTo(this.x,this.y);
-        let vscale = 10;
-        ctx.lineTo(this.x+this.velocity[0]*vscale,this.y+this.velocity[1]*vscale)
+        let vscale = 1;
+        ctx.moveTo(this.x-camcords[0],this.y-camcords[1]);
+        ctx.lineTo(this.x+this.velocity[0]*vscale-camcords[0],this.y+this.velocity[1]*vscale-camcords[1])
         ctx.stroke();
 
         // Draw acceleration vector
         ctx.beginPath();
         ctx.strokeStyle = "green";
-        let ascale = 100;
-        ctx.moveTo(this.x,this.y);
-        ctx.lineTo(this.x+this.a[0]*ascale,this.y+this.a[1]*ascale);
+        let ascale = 25;
+        ctx.moveTo(this.x-camcords[0],this.y-camcords[1]);
+        ctx.lineTo(this.x+this.a[0]*ascale-camcords[0],this.y+this.a[1]*ascale-camcords[1]);
         ctx.stroke();
-        console.log([this.x,this.y],[this.x+this.a[0]*ascale,this.y+this.a[1]*ascale]);
     }
     update(otherplanets) {
         // Move
         let alpha = 0.1
         this.x += this.velocity[0]*alpha;
         this.y += this.velocity[1]*alpha;
+        this.history.push([this.x,this.y]);
         // Accelerate
         this.a = [0, 0];
         let gamma = 1;
@@ -99,9 +113,15 @@ function update() {
         }
         planets[i].update(otherplanets);
     }
+    let averagecord = [0,0];
     for (let i = 0; i < planets.length; i++) {
         planets[i].update_lastpos()
+        averagecord[0] += planets[i].x;
+        averagecord[1] += planets[i].y;
     }
+    averagecord[0] = averagecord[0] / planets.length-w/2;
+    averagecord[1] = averagecord[1] / planets.length-h/2;
+    camcords = averagecord;
 }
 
 function draw() {
@@ -109,9 +129,13 @@ function draw() {
     ctx.fillRect(0,0,w,h);
     ctx.fill();
     for (i = 0; i<planets.length;i++) {
+        planets[i].drawhistory(ctx); 
+    }
+    for (i = 0; i<planets.length;i++) {
         planets[i].draw(ctx); 
     }
 }
+
 
 let looptest = 0;
 let total_time = 0;
